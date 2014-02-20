@@ -62,7 +62,7 @@
             near = 0.1, 
             far = 20000,
             movespeed = 100,
-            lookspeed = 0.075,
+            lookspeed = 0.5,
             models = [];
 
         // Physijs physics setup
@@ -105,8 +105,8 @@
         var controls = new THREE.FirstPersonControls(camera);
         controls.movementSpeed = movespeed;
         controls.lookSpeed = lookspeed;
-        controls.lookVertical = false;
-        controls.noFly = true;
+        // controls.lookVertical = false;
+        // controls.noFly = true;
 
         // skybox
         var Skybox = new Skybox('mp_001', 5000);
