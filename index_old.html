@@ -1,0 +1,308 @@
+<!DOCTYPE HTML>
+<html manifest="" lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>SHOOTER HTML5 WEBGL</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-touch-fullscreen" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <link rel="apple-touch-icon" sizes="57x57" href="assets/img/ico/favicon114.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="assets/img/ico/favicon114.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="assets/img/ico/favicon144.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="assets/img/ico/favicon144.png" />
+    <link rel="apple-touch-icon-precomposed" href="assets/img/ico/favicon144.png" />
+    
+    <link rel="shortcut icon" href="assets/img/ico/favicon.ico">
+
+<!--[if gte IE 9]>
+    <meta name="application-name" content="SHOOTER HTML5 WEBGL" />
+    <meta name="msapplication-tooltip" content="SHOOTER HTML5 WEBGL" />
+    <meta name="msapplication-starturl" content="git.t2p0.com/roccojanse/shooter" />
+<![endif]-->
+
+    <link rel="stylesheet" href="css/shooter.css" />
+    
+    <script src="js/jquery/jquery-2.0.3.min.js"></script>
+
+    <script src="js/three/three.js"></script>
+    <script src="js/physijs/physi.js"></script>
+
+    <script src="js/three/libs/stats.min.js"></script>
+    <!-- <script src="js/three/THREEx.KeyboardState.js"></script> -->
+    <script src="js/three/controls/PointerLockControls.js"></script>
+
+    <script src="src/js/Skybox.js"></script>
+    <script src="src/js/Lensflare.js"></script>
+
+<!--     <script src="../three.js/examples/js/loaders/ctm/lzma.js"></script>
+    <script src="../three.js/examples/js/loaders/ctm/ctm.js"></script>
+    <script src="../three.js/examples/js/loaders/ctm/CTMLoader.js"></script>   
+    <script src="../three.js/examples/js/loaders/BinaryLoader.js"></script>
+    <script src="../three.js/examples/js/loaders/OBJLoader.js"></script>
+    <script src="../three.js/examples/js/loaders/VTKLoader.js"></script>
+    <script src="../three.js/examples/js/loaders/STLLoader.js"></script>
+    <script src="../three.js/examples/js/loaders/ColladaLoader.js"></script>
+    <script src="../three.js/examples/js/loaders/UTF8Loader.js"></script>
+    <script src="../three.js/examples/js/loaders/MTLLoader.js"></script> -->
+
+</head>
+<body>
+    <script>
+
+
+    // screens
+    // objects
+    // assets
+    // game -> world -> threejs 
+    // 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        var havePointerLock = 'pointerLockElement' in document || 
+                              'mozPointerLockElement' in document || 
+                              'webkitPointerLockElement' in document;
+
+        if (havePointerLock) {
+
+            var element = document.body;
+
+            var pointerlockchange = function (e) {
+                if (document.pointerLockElement === element || 
+                    document.mozPointerLockElement === element || 
+                    document.webkitPointerLockElement === element) {
+                    controls.enabled = true;
+                } else {
+                    controls.enabled = false;
+                }
+            };
+
+            var pointerlockerror = function (e) {};
+
+            // Hook pointer lock state change events
+            document.addEventListener('pointerlockchange', pointerlockchange, false);
+            document.addEventListener('mozpointerlockchange', pointerlockchange, false);
+            document.addEventListener('webkitpointerlockchange', pointerlockchange, false);
+
+            document.addEventListener('pointerlockerror', pointerlockerror, false);
+            document.addEventListener('mozpointerlockerror', pointerlockerror, false);
+            document.addEventListener('webkitpointerlockerror', pointerlockerror, false);
+
+            document.addEventListener( 'click', function ( event ) {
+                
+                // Ask the browser to lock the pointer
+                element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+
+                if ( /Firefox/i.test( navigator.userAgent ) ) {
+
+                    var fullscreenchange = function ( event ) {
+
+                        if ( document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
+
+                            document.removeEventListener( 'fullscreenchange', fullscreenchange );
+                            document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+
+                            element.requestPointerLock();
+                        }
+
+                    }
+
+                    document.addEventListener( 'fullscreenchange', fullscreenchange, false );
+                    document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
+
+                    element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
+
+                    element.requestFullscreen();
+
+                } else {
+
+                    element.requestPointerLock();
+
+                }
+
+            }, false );
+
+        } else {
+
+            console.log('Your browser doesn\'t seem to support Pointer Lock API');
+
+        }
+
+        // vars
+        var width = $(window).width(), 
+            height = $(window).height(),
+            view_angle = 60, 
+            aspect = width / height, 
+            near = 0.1, 
+            far = 20000,
+            movespeed = 100,
+            lookspeed = 0.5,
+            models = [];
+
+        // Physijs physics setup
+        Physijs.scripts.worker = 'js/physijs/physijs_worker.js';
+        Physijs.scripts.ammo = 'ammo.js';
+
+        // stats
+        var stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.bottom = '0px';
+        stats.domElement.style.zIndex = 100;
+        $(document.body).append(stats.domElement);
+
+        // timer
+        var timer = new THREE.Clock(),
+            time = Date.now();
+
+        // keyboard
+        //var keyboard = new THREEx.KeyboardState();
+
+        // scene
+        //var scene = new THREE.Scene();
+        var scene = new Physijs.Scene();
+        scene.setGravity(new THREE.Vector3(0, -30, 0));
+        scene.fog = new THREE.FogExp2(0xffffff, 0.00025);
+
+        
+        
+        // camera
+        var camera = new THREE.PerspectiveCamera(view_angle, aspect, near, far);
+        camera.position.set(0, 0, -30);
+        camera.lookAt(scene.position);
+        //scene.add(camera);
+
+        // renderer
+        var renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+        });
+        renderer.setSize(width, height);
+        renderer.shadowMapEnabled = true;
+        renderer.shadowMapSoft = true;
+        $(document.body).append(renderer.domElement);        
+
+        // helpers
+        var axisHelper = new THREE.AxisHelper(50);
+        scene.add(axisHelper);
+
+
+
+var test = new THREE.Object3D();
+
+          cube1 = new Physijs.BoxMesh(
+            new THREE.CubeGeometry(10, 10, 10),
+            Physijs.createMaterial(
+              new THREE.MeshNormalMaterial(), 0.2, 0.9
+            )
+          );
+          cube1.name = 'cube1';
+          cube1.addEventListener('collision', function(obj) {
+            console.log('CUBE -> ', obj);
+          });
+
+          test.add(cube1);
+
+          test.add(camera);
+
+          scene.add(test);
+
+          cube2 = new Physijs.BoxMesh(
+            new THREE.CubeGeometry(10, 10, 10),
+            Physijs.createMaterial(
+              new THREE.MeshNormalMaterial(), 0.2, 0.9
+            )
+          );
+          cube1.name = 'cube2';
+          cube2.position.z = 50;
+          cube2.addEventListener('collision', function(obj) {
+            console.log('CUBE2 -> ', obj);
+          });
+          scene.add(cube2);
+
+        // controls
+        //var controls = new THREE.FirstPersonControls(cube1);
+        //controls.movementSpeed = movespeed;
+        //controls.lookSpeed = lookspeed;
+        // controls.lookVertical = false;
+        // controls.noFly = true;
+        var controls = new THREE.PointerLockControls(test);
+        scene.add(controls.getObject());
+
+
+        // skybox
+        var Skybox = new Skybox('mp_001', 5000);
+        scene.add(Skybox.getElement());
+        
+        // lensflare
+        new Lensflare(scene);
+
+
+
+        var loader = new THREE.JSONLoader();
+        loader.load('src/js/obj/maps/mp_001.js', function(geo, mat) {
+            material = Physijs.createMaterial(new THREE.MeshFaceMaterial(mat), 1, 1);
+            terrain = new Physijs.PlaneMesh(geo, material, 0);
+            //models.push(new THREE.Mesh(data, material));
+            //scene.add(model = new THREE.Mesh(data, material));
+            //
+            terrain.name = 'dirtroad';
+            terrain.position.z = 0;
+            terrain.position.y = 0;
+            terrain.position.x = 0;
+            
+            scene.add(terrain);
+        }, 'assets/img/textures');
+
+
+
+
+
+
+        animate();
+
+
+
+
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            render();       
+            update();
+        }
+
+        function update() {
+
+            
+            stats.update();
+            
+        } 
+
+        function render() {
+            scene.simulate();
+            controls.update(Date.now() - time);
+            renderer.render(scene, camera);
+            time = Date.now();
+        }
+
+    </script>
+</body>
+</html>

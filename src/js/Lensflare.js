@@ -26,7 +26,7 @@ $.extend(Lensflare.prototype, {
     addLight: function(h, s, l, x, y, z) {
 
         var light = new THREE.PointLight(0xffffff, 1.5, 4500);
-        light.color.setHSL(h, s, l);
+        //light.color.setHSL(h, s, l);
         light.position.set(x, y, z);
         this.scene.add(light);
 
