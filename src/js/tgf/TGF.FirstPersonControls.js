@@ -16,12 +16,15 @@ TGF.FirstPersonControls = function(camera, el) {
     this.yawObject = new THREE.Object3D();
 
     this.camera.rotation.set(0, 0, 0);
+    this.camHeight = 15;
     this.pitchObject.add(this.camera);
-    this.yawObject.position.y = 10;
+
+    this.yawObject.position.y = this.camHeight;
     this.yawObject.add(this.pitchObject);
 
     this.speed = 10;
     this.lookSpeed = 0.5;
+    this.jumpHeight = 10;
 
     this.moveForward = false;
     this.moveBackward = false;
@@ -57,7 +60,7 @@ $.extend(TGF.FirstPersonControls.prototype, /** @lends TGF.FirstPersonControls *
         this.velocity.x += (- this.velocity.x) * 0.08 * delta;
         this.velocity.z += (- this.velocity.z) * 0.08 * delta;
 
-        this.velocity.y -= 0.25 * delta;
+        this.velocity.y -= 0.08 * delta;
 
         if (this.moveForward) this.velocity.z -= 0.06 * delta;
         if (this.moveBackward) this.velocity.z += 0.06 * delta;
@@ -73,12 +76,13 @@ $.extend(TGF.FirstPersonControls.prototype, /** @lends TGF.FirstPersonControls *
         this.yawObject.translateY(this.velocity.y); 
         this.yawObject.translateZ(this.velocity.z);
 
-        if (this.yawObject.position.y < 10) {
+        if (this.yawObject.position.y < this.camHeight) {
             this.velocity.y = 0;
-            this.yawObject.position.y = 10;
+            this.yawObject.position.y = this.camHeight;
             this.canJump = true;
         }
 
+        console.log(this.yawObject);
     },
 
     onMouseMove: function(e) {
@@ -119,7 +123,7 @@ $.extend(TGF.FirstPersonControls.prototype, /** @lends TGF.FirstPersonControls *
 
             case 32: // space
                 if (this.canJump === true ) {
-                    this.velocity.y += 10;
+                    this.velocity.y += this.jumpHeight;
                 }
                 this.canJump = false;
                 break;
@@ -158,12 +162,6 @@ $.extend(TGF.FirstPersonControls.prototype, /** @lends TGF.FirstPersonControls *
     isOnObject: function (boolean) {
         this.isOnObject = boolean;
         this.canJump = boolean;
-    },
-
-    getDirection: function() {
-
-       // console.log(this);
-
     },
 
     checkPointerLock: function(el) {
